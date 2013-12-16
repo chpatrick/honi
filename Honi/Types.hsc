@@ -4,11 +4,13 @@
 
 module Honi.Types
   ( Status(..)
-  , DeviceInfo(..)
-  , DeviceHandle(..)
+  , PixelFormat(..)
+  , SensorType(..), SensorInfo(..)
+  , DeviceInfo(..), DeviceHandle(..)
   , StreamHandle(..)
   , RecorderHandle(..)
   , OpaquePtr
+  , CEnum(..)
   ) where
 
 import Control.Applicative
@@ -19,6 +21,11 @@ import Control.Applicative
 import Data.Word
 import qualified Data.ByteString as BS
 import Foreign
+import Foreign.C
+
+class CEnum a where
+  fromCInt :: CInt -> a
+  toCInt :: a -> CInt
 
 data Status
   = StatusOK
@@ -31,23 +38,23 @@ data Status
   | StatusTimeOut
     deriving ( Eq, Ord, Show )
 
-instance Enum Status where
-  fromEnum StatusOK = 0
-  fromEnum StatusError = 1
-  fromEnum StatusNotImplemented = 2
-  fromEnum StatusNotSupported = 3
-  fromEnum StatusBadParameter = 4
-  fromEnum StatusOutOfFlow = 5
-  fromEnum StatusNoDevice = 6
-  fromEnum StatusTimeOut = 102
-  toEnum 0 = StatusOK
-  toEnum 1 = StatusError
-  toEnum 2 = StatusNotImplemented
-  toEnum 3 = StatusNotSupported
-  toEnum 4 = StatusBadParameter
-  toEnum 5 = StatusOutOfFlow
-  toEnum 6 = StatusNoDevice
-  toEnum 102 = StatusTimeOut
+instance CEnum Status where
+  toCInt StatusOK = 0
+  toCInt StatusError = 1
+  toCInt StatusNotImplemented = 2
+  toCInt StatusNotSupported = 3
+  toCInt StatusBadParameter = 4
+  toCInt StatusOutOfFlow = 5
+  toCInt StatusNoDevice = 6
+  toCInt StatusTimeOut = 102
+  fromCInt 0 = StatusOK
+  fromCInt 1 = StatusError
+  fromCInt 2 = StatusNotImplemented
+  fromCInt 3 = StatusNotSupported
+  fromCInt 4 = StatusBadParameter
+  fromCInt 5 = StatusOutOfFlow
+  fromCInt 6 = StatusNoDevice
+  fromCInt 102 = StatusTimeOut
 
 data SensorType
   = SensorIR
@@ -55,13 +62,48 @@ data SensorType
   | SensorDepth
     deriving ( Eq, Ord, Show )
 
-instance Enum SensorType where
-  fromEnum SensorIR = 1
-  fromEnum SensorDepth = 2
-  fromEnum SensorColor = 3
-  toEnum 1 = SensorIR
-  toEnum 2 = SensorDepth
-  toEnum 3 = SensorColor
+data PixelFormat
+  = Depth1MM
+  | Depth100UM
+  | Shift9_2
+  | Shift9_3
+  | RGB888
+  | YUV422
+  | Gray8
+  | Gray16
+  | JPEG
+  | YUVY
+    deriving ( Show, Ord, Eq )
+
+instance CEnum PixelFormat where
+  toCInt Depth1MM = 100
+  toCInt Depth100UM = 101
+  toCInt Shift9_2 = 102
+  toCInt Shift9_3 = 103
+  toCInt RGB888 = 200
+  toCInt YUV422 = 201
+  toCInt Gray8 = 202
+  toCInt Gray16 = 203
+  toCInt JPEG = 204
+  toCInt YUVY = 205
+  fromCInt 100 = Depth1MM
+  fromCInt 101 = Depth100UM
+  fromCInt 102 = Shift9_2
+  fromCInt 103 = Shift9_3
+  fromCInt 200 = RGB888
+  fromCInt 201 = YUV422
+  fromCInt 202 = Gray8
+  fromCInt 203 = Gray16
+  fromCInt 204 = JPEG
+  fromCInt 205 = YUVY
+
+instance CEnum SensorType where
+  toCInt SensorIR = 1
+  toCInt SensorDepth = 2
+  toCInt SensorColor = 3
+  fromCInt 1 = SensorIR
+  fromCInt 2 = SensorDepth
+  fromCInt 3 = SensorColor
 
 data DeviceInfo = DeviceInfo
   { uri :: BS.ByteString
@@ -70,8 +112,6 @@ data DeviceInfo = DeviceInfo
   , usbVendorID :: Word16
   , usbProductID :: Word16
   } deriving Show
-
-#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
 instance Storable DeviceInfo where
   alignment _ = #{alignment OniDeviceInfo}
@@ -82,6 +122,43 @@ instance Storable DeviceInfo where
     BS.packCString (#{ptr OniDeviceInfo, name} ptr) <*>
     #{peek OniDeviceInfo, usbVendorId} ptr <*>
     #{peek OniDeviceInfo, usbProductId} ptr
+
+data VideoMode = VideoMode
+  { pixelFormat :: PixelFormat
+  , resolutionX :: Int
+  , resolutionY :: Int
+  , fps :: Int
+  } deriving Show
+
+cIntToInt :: CInt -> Int
+cIntToInt = fromIntegral
+
+instance Storable VideoMode where
+  alignment _ = #{alignment OniVideoMode}
+  sizeOf _ = #{size OniVideoMode}
+  peek ptr = VideoMode <$>
+    (fromCInt <$> #{peek OniVideoMode, pixelFormat} ptr) <*>
+    (cIntToInt <$> #{peek OniVideoMode, resolutionX} ptr) <*>
+    (cIntToInt <$> #{peek OniVideoMode, resolutionY} ptr) <*>
+    (cIntToInt <$> #{peek OniVideoMode, fps} ptr)
+
+data SensorInfo = SensorInfo
+  { sensorType :: SensorType
+  , supportedVideoModes :: [ VideoMode ]
+  } deriving Show
+
+instance Storable SensorInfo where
+  alignment _ = #{alignment OniSensorInfo}
+  sizeOf _ = #{size OniSensorInfo}
+  peek ptr = do
+    sensorType <- fromCInt <$> #{peek OniSensorInfo, sensorType} ptr
+    nvm <- #{peek OniSensorInfo, numSupportedVideoModes} ptr
+    vmsPtr <- #{peek OniSensorInfo, pSupportedVideoModes} ptr
+    vms <- peekArray (cIntToInt nvm) vmsPtr
+    return $ SensorInfo sensorType vms
+
+#let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
 
 data Opaque
 

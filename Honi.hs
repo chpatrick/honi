@@ -4,7 +4,7 @@ module Honi
   (ApiVersion
   , initialize, shutdown
   , getDeviceList
-  , deviceOpen, deviceOpenInfo, deviceClose
+  , deviceOpen, deviceOpenInfo, deviceClose, deviceGetSensorInfo
   )
 where
 
@@ -18,9 +18,6 @@ import Honi.Types
 type OniStatus = CInt
 type Oni a = IO (Either Status a)
 
-toStatus :: OniStatus -> Status
-toStatus = toEnum . fromIntegral
-
 foreign import ccall unsafe "OniCAPI.h oniInitialize"
   oniInitialize :: CInt -> IO OniStatus
 
@@ -28,7 +25,7 @@ type ApiVersion = Int
 
 initialize :: ApiVersion -> IO Status
 initialize version
-  = toStatus <$> oniInitialize (fromIntegral version)
+  = fromCInt <$> oniInitialize (fromIntegral version)
 
 foreign import ccall unsafe "OniCAPI.h oniShutdown"
   shutdown :: IO ()
@@ -51,7 +48,7 @@ getDeviceList = alloca $ \listPtr -> alloca $ \numPtr ->
 whenOK :: IO OniStatus -> Oni a -> Oni a
 whenOK oni ok = do
   r <- oni
-  case toStatus r of
+  case fromCInt r of
     StatusOK -> ok
     err -> return $ Left err
 
@@ -72,4 +69,17 @@ foreign import ccall unsafe "OniCAPI.h oniDeviceClose"
   oniDeviceClose :: OpaquePtr -> IO OniStatus
 
 deviceClose :: DeviceHandle -> IO Status
-deviceClose (DeviceHandle p) = toStatus <$> oniDeviceClose p
+deviceClose (DeviceHandle p) = fromCInt <$> oniDeviceClose p
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceGetSensorInfo"
+  oniDeviceGetSensorInfo :: OpaquePtr -> CInt -> IO (Ptr SensorInfo)
+
+deviceGetSensorInfo :: DeviceHandle -> SensorType -> IO (Maybe SensorInfo)
+deviceGetSensorInfo (DeviceHandle p) sensorType = do
+  sip <- oniDeviceGetSensorInfo p (toCInt sensorType)
+  if sip == nullPtr
+    then return Nothing
+    else do
+      sensorInfo <- peek sip
+      free sip
+      return $ Just sensorInfo
