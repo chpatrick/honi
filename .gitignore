@@ -1,3 +1,5 @@
 *.sublime-*
 *.swp
 dist/
+Honi/Types.hs
+cabal-dev/
