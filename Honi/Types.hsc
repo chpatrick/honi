@@ -1,6 +1,15 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 #include "OniCAPI.h"
 
-module Honi.Types(Status(..), DeviceInfo) where
+module Honi.Types
+  ( Status(..)
+  , DeviceInfo(..)
+  , DeviceHandle(..)
+  , StreamHandle(..)
+  , RecorderHandle(..)
+  , OpaquePtr
+  ) where
 
 import Control.Applicative
 import Data.Word
@@ -55,3 +64,16 @@ instance Storable DeviceInfo where
     BS.packCString (#{ptr OniDeviceInfo, name} ptr) <*>
     #{peek OniDeviceInfo, usbVendorId} ptr <*>
     #{peek OniDeviceInfo, usbProductId} ptr
+
+data Opaque
+
+type OpaquePtr = Ptr Opaque
+
+newtype DeviceHandle = DeviceHandle OpaquePtr
+  deriving ( Eq, Ord, Storable )
+
+newtype StreamHandle = StreamHandle OpaquePtr
+  deriving ( Eq, Ord, Storable )
+
+newtype RecorderHandle = RecorderHandle OpaquePtr
+  deriving ( Eq, Ord, Storable )
