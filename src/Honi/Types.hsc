@@ -33,7 +33,7 @@ data Status
   | StatusOutOfFlow
   | StatusNoDevice
   | StatusTimeOut
-    deriving ( Eq, Ord, Show )
+    deriving ( Bounded, Enum, Eq, Ord, Show )
 
 instance CEnum Status where
   toCInt StatusOK = 0
@@ -57,7 +57,7 @@ data SensorType
   = SensorIR
   | SensorColor
   | SensorDepth
-    deriving ( Eq, Ord, Show )
+    deriving ( Bounded, Enum, Eq, Ord, Show )
 
 data PixelFormat
   = Depth1MM
@@ -70,7 +70,7 @@ data PixelFormat
   | Gray16
   | JPEG
   | YUVY
-    deriving ( Show, Ord, Eq )
+    deriving ( Bounded, Enum, Show, Ord, Eq )
 
 instance CEnum PixelFormat where
   toCInt Depth1MM = 100
