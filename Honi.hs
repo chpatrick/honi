@@ -4,7 +4,7 @@ module Honi
   (ApiVersion
   , initialize, shutdown
   , getDeviceList
-  , deviceOpen, deviceClose
+  , deviceOpen, deviceOpenInfo, deviceClose
   )
 where
 
@@ -64,6 +64,9 @@ deviceOpen uri
       alloca $ \handlePtr ->
         whenOK (oniDeviceOpen uriPtr handlePtr)
           ((Right . DeviceHandle) <$> peek handlePtr)
+
+deviceOpenInfo :: DeviceInfo -> Oni DeviceHandle
+deviceOpenInfo = deviceOpen . uri
 
 foreign import ccall unsafe "OniCAPI.h oniDeviceClose"
   oniDeviceClose :: OpaquePtr -> IO OniStatus
