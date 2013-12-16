@@ -17,4 +17,4 @@ library
   exposed-modules: Honi, Honi.Types
   -- other-modules:       
   build-depends:       base, text, bytestring
-  extra-libraries:     OpenNI2
+  extra-libraries:     OpenNI2, freenect
