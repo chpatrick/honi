@@ -19,3 +19,17 @@ library
   -- other-modules:
   build-depends:       base, text, bytestring
   extra-libraries:     OpenNI2, freenect
+  ghc-options: -Wall
+
+test-Suite tests
+  type: exitcode-stdio-1.0
+  hs-source-dirs:
+    test
+  main-is:
+    Main.hs
+  build-depends:
+      base >= 4
+    , honi
+    , hspec >= 1.7
+    , HUnit >= 1.2
+  ghc-options: -Wall
