@@ -4,7 +4,14 @@ module Honi
   (ApiVersion
   , initialize, shutdown
   , getDeviceList
-  , deviceOpen, deviceOpenInfo, deviceClose, deviceGetSensorInfo
+  , deviceOpen
+  , deviceOpenInfo
+  , deviceClose
+  , deviceGetSensorInfo
+  , deviceCreateStream
+
+  , streamStart
+  , streamStop
   )
 where
 
@@ -82,3 +89,23 @@ deviceGetSensorInfo (DeviceHandle p) sType = do
     else do
       sensorInfo <- peek sip
       return $ Just sensorInfo
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceCreateStream"
+  oniDeviceCreateStream :: OpaquePtr -> CInt -> Ptr OpaquePtr -> IO OniStatus
+
+deviceCreateStream :: DeviceHandle -> SensorType -> Oni StreamHandle
+deviceCreateStream (DeviceHandle dh) st = alloca $ \streamPtr ->
+  whenOK (oniDeviceCreateStream dh (toCInt st) streamPtr)
+    ((Right . StreamHandle) <$> peek streamPtr)
+
+foreign import ccall unsafe "OniCAPI.h oniStreamStart"
+  oniStreamStart :: OpaquePtr -> IO OniStatus
+
+streamStart :: StreamHandle -> IO Status
+streamStart (StreamHandle sh) = fromCInt <$> oniStreamStart sh
+
+foreign import ccall unsafe "OniCAPI.h oniStreamStop"
+  oniStreamStop :: OpaquePtr -> IO ()
+
+streamStop :: StreamHandle -> IO ()
+streamStop (StreamHandle sh) = oniStreamStop sh
