@@ -1,4 +1,10 @@
-module Honi where
+{-# LANGUAGE ForeignFunctionInterface #-}
+
+module Honi
+  (ApiVersion
+  , initialize
+  )
+where
 
 import Control.Applicative
 import Foreign.C
