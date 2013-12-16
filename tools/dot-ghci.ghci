@@ -1,0 +1,10 @@
+:{
+:def honiInfo \ _arg -> return $ unlines
+        [ "import Honi"
+        , "import Honi.Types"
+        , "initialize 2"
+        , "Right [d] <- getDeviceList"
+        , "Right dh <- deviceOpenInfo d"
+        , "deviceGetSensorInfo dh SensorDepth"
+        ]
+:}
