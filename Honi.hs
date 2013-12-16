@@ -2,7 +2,7 @@
 
 module Honi
   (ApiVersion
-  , initialize
+  , initialize, shutdown, withOpenNI
   )
 where
 
@@ -19,3 +19,9 @@ type ApiVersion = Int
 initialize :: ApiVersion -> IO OniStatus
 initialize version
   = (toEnum . fromIntegral) <$> oniInitialize (fromIntegral version)
+
+foreign import ccall unsafe "OniCAPI.h oniShutdown"
+  shutdown :: IO ()
+
+withOpenNI :: ApiVersion -> IO () -> IO ()
+withOpenNI version a = initialize version >> a >> shutdown
