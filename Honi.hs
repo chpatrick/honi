@@ -81,5 +81,4 @@ deviceGetSensorInfo (DeviceHandle p) sType = do
     then return Nothing
     else do
       sensorInfo <- peek sip
-      free sip
       return $ Just sensorInfo
