@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls #-}
 
 #include "OniCAPI.h"
 
@@ -10,6 +10,10 @@ module Honi.Types
   , RecorderHandle(..)
   , OpaquePtr
   ) where
+
+import Control.Applicative
+import Data.Word
+import qualified Data.ByteString as BS
 
 import Control.Applicative
 import Data.Word
@@ -44,6 +48,20 @@ instance Enum Status where
   toEnum 5 = StatusOutOfFlow
   toEnum 6 = StatusNoDevice
   toEnum 102 = StatusTimeOut
+
+data SensorType
+  = SensorIR
+  | SensorColor
+  | SensorDepth
+    deriving ( Eq, Ord, Show )
+
+instance Enum SensorType where
+  fromEnum SensorIR = 1
+  fromEnum SensorDepth = 2
+  fromEnum SensorColor = 3
+  toEnum 1 = SensorIR
+  toEnum 2 = SensorDepth
+  toEnum 3 = SensorColor
 
 data DeviceInfo = DeviceInfo
   { uri :: BS.ByteString
