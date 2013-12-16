@@ -56,8 +56,8 @@ foreign import ccall unsafe "OniCAPI.h oniDeviceOpen"
   oniDeviceOpen :: CString -> Ptr OpaquePtr -> IO OniStatus
 
 deviceOpen :: BS.ByteString -> Oni DeviceHandle
-deviceOpen uri
-  = BS.useAsCString uri $ \uriPtr ->
+deviceOpen devUri
+  = BS.useAsCString devUri $ \uriPtr ->
       alloca $ \handlePtr ->
         whenOK (oniDeviceOpen uriPtr handlePtr)
           ((Right . DeviceHandle) <$> peek handlePtr)
@@ -75,8 +75,8 @@ foreign import ccall unsafe "OniCAPI.h oniDeviceGetSensorInfo"
   oniDeviceGetSensorInfo :: OpaquePtr -> CInt -> IO (Ptr SensorInfo)
 
 deviceGetSensorInfo :: DeviceHandle -> SensorType -> IO (Maybe SensorInfo)
-deviceGetSensorInfo (DeviceHandle p) sensorType = do
-  sip <- oniDeviceGetSensorInfo p (toCInt sensorType)
+deviceGetSensorInfo (DeviceHandle p) sType = do
+  sip <- oniDeviceGetSensorInfo p (toCInt sType)
   if sip == nullPtr
     then return Nothing
     else do

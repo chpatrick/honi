@@ -5,6 +5,7 @@
 module Honi.Types
   ( Status(..)
   , PixelFormat(..)
+  , VideoMode(..)
   , SensorType(..), SensorInfo(..)
   , DeviceInfo(..), DeviceHandle(..)
   , StreamHandle(..)
@@ -12,10 +13,6 @@ module Honi.Types
   , OpaquePtr
   , CEnum(..)
   ) where
-
-import Control.Applicative
-import Data.Word
-import qualified Data.ByteString as BS
 
 import Control.Applicative
 import Data.Word
@@ -151,11 +148,11 @@ instance Storable SensorInfo where
   alignment _ = #{alignment OniSensorInfo}
   sizeOf _ = #{size OniSensorInfo}
   peek ptr = do
-    sensorType <- fromCInt <$> #{peek OniSensorInfo, sensorType} ptr
+    st <- fromCInt <$> #{peek OniSensorInfo, sensorType} ptr
     nvm <- #{peek OniSensorInfo, numSupportedVideoModes} ptr
     vmsPtr <- #{peek OniSensorInfo, pSupportedVideoModes} ptr
     vms <- peekArray (cIntToInt nvm) vmsPtr
-    return $ SensorInfo sensorType vms
+    return $ SensorInfo st vms
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
 
