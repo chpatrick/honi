@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls, DeriveDataTypeable #-}
 
 #include "OniCAPI.h"
 
@@ -12,11 +12,14 @@ module Honi.Types
   , RecorderHandle(..)
   , OpaquePtr
   , CEnum(..)
+  , HoniBug(..)
   ) where
 
 import Control.Applicative
+import Control.Exception
 import Data.Word
 import qualified Data.ByteString as BS
+import Data.Typeable
 import Foreign
 import Foreign.C
 
@@ -35,6 +38,12 @@ data Status
   | StatusTimeOut
     deriving ( Bounded, Enum, Eq, Ord, Show )
 
+data HoniBug
+  = HoniBugUnknownCEnum String CInt
+    deriving ( Eq, Ord, Show, Typeable )
+
+instance Exception HoniBug
+
 instance CEnum Status where
   toCInt StatusOK = 0
   toCInt StatusError = 1
@@ -52,6 +61,7 @@ instance CEnum Status where
   fromCInt 5 = StatusOutOfFlow
   fromCInt 6 = StatusNoDevice
   fromCInt 102 = StatusTimeOut
+  fromCInt i = throw (HoniBugUnknownCEnum "Status" i)
 
 data SensorType
   = SensorIR
@@ -93,6 +103,7 @@ instance CEnum PixelFormat where
   fromCInt 203 = Gray16
   fromCInt 204 = JPEG
   fromCInt 205 = YUVY
+  fromCInt i = throw (HoniBugUnknownCEnum "PixelFormat" i)
 
 instance CEnum SensorType where
   toCInt SensorIR = 1
@@ -101,6 +112,7 @@ instance CEnum SensorType where
   fromCInt 1 = SensorIR
   fromCInt 2 = SensorDepth
   fromCInt 3 = SensorColor
+  fromCInt i = throw (HoniBugUnknownCEnum "SensorType" i)
 
 data DeviceInfo = DeviceInfo
   { uri :: BS.ByteString
