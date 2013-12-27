@@ -31,6 +31,11 @@ module Honi
   -- * Streams
   , streamStart
   , streamStop
+
+  -- * Timeouts
+  , OniTimeout
+  , timeoutNone
+  , timeoutForever
   )
 where
 

@@ -20,6 +20,9 @@ module Honi.Types
   , OpaquePtr
   , CEnum(..)
   , HoniBug(..)
+  , OniTimeout(..)
+  , timeoutNone
+  , timeoutForever
   ) where
 
 import Control.Applicative
@@ -194,6 +197,20 @@ instance Storable SensorInfo where
     return $ SensorInfo st vms
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
+
+
+-- | Timeout in milliseconds.
+-- Must be positive or `timeoutForever` or `timeoutNone`.
+newtype OniTimeout = OniTimeout Int
+  deriving ( Show, Ord, Eq )
+
+-- | No timeout (for immediate return).
+timeoutNone :: OniTimeout
+timeoutNone = OniTimeout (#const ONI_TIMEOUT_NONE)
+
+-- | Infinite timeout.
+timeoutForever :: OniTimeout
+timeoutForever = OniTimeout (#const ONI_TIMEOUT_FOREVER)
 
 
 data Opaque
