@@ -29,6 +29,7 @@ module Honi
   , deviceCreateStream
   , waitForAnyStream
   , getVersion
+  , getExtendedError
 
   -- * Streams
   , streamStart
@@ -189,3 +190,15 @@ foreign import ccall unsafe "helpers.h helper_oniGetVersion"
 -- | Get the current version of OpenNI2.
 getVersion :: IO OniVersion
 getVersion = peek =<< helper_oniGetVersion
+
+foreign import ccall unsafe "OniCAPI.h oniGetExtendedError"
+  oniGetExtendedError :: IO CString
+
+-- | Returns an additional, human-readable information about the LAST OpenNI error.
+-- This is the last global error, so don't rely on it when using multiple
+-- threads using OpenNI. It also doesn't look like it's thread-safe AT ALL,
+-- so better don't use it at all when using multiple threads using OpenNI.
+getExtendedError :: IO String
+getExtendedError = do
+  charPtr <- oniGetExtendedError
+  peekCAString charPtr
