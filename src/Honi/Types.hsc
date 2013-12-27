@@ -88,22 +88,22 @@ data HoniBug
 instance Exception HoniBug
 
 instance CEnum Status where
-  toCInt StatusOK = 0
-  toCInt StatusError = 1
-  toCInt StatusNotImplemented = 2
-  toCInt StatusNotSupported = 3
-  toCInt StatusBadParameter = 4
-  toCInt StatusOutOfFlow = 5
-  toCInt StatusNoDevice = 6
-  toCInt StatusTimeOut = 102
-  fromCInt 0 = StatusOK
-  fromCInt 1 = StatusError
-  fromCInt 2 = StatusNotImplemented
-  fromCInt 3 = StatusNotSupported
-  fromCInt 4 = StatusBadParameter
-  fromCInt 5 = StatusOutOfFlow
-  fromCInt 6 = StatusNoDevice
-  fromCInt 102 = StatusTimeOut
+  toCInt StatusOK             = #const ONI_STATUS_OK
+  toCInt StatusError          = #const ONI_STATUS_ERROR
+  toCInt StatusNotImplemented = #const ONI_STATUS_NOT_IMPLEMENTED
+  toCInt StatusNotSupported   = #const ONI_STATUS_NOT_SUPPORTED
+  toCInt StatusBadParameter   = #const ONI_STATUS_BAD_PARAMETER
+  toCInt StatusOutOfFlow      = #const ONI_STATUS_OUT_OF_FLOW
+  toCInt StatusNoDevice       = #const ONI_STATUS_NO_DEVICE
+  toCInt StatusTimeOut        = #const ONI_STATUS_TIME_OUT
+  fromCInt (#const ONI_STATUS_OK)              = StatusOK
+  fromCInt (#const ONI_STATUS_ERROR)           = StatusError
+  fromCInt (#const ONI_STATUS_NOT_IMPLEMENTED) = StatusNotImplemented
+  fromCInt (#const ONI_STATUS_NOT_SUPPORTED)   = StatusNotSupported
+  fromCInt (#const ONI_STATUS_BAD_PARAMETER)   = StatusBadParameter
+  fromCInt (#const ONI_STATUS_OUT_OF_FLOW)     = StatusOutOfFlow
+  fromCInt (#const ONI_STATUS_NO_DEVICE)       = StatusNoDevice
+  fromCInt (#const ONI_STATUS_TIME_OUT)        = StatusTimeOut
   fromCInt i = throw (HoniBugUnknownCEnum "Status" i)
 
 -- | The source of the stream.
@@ -128,35 +128,35 @@ data PixelFormat
     deriving ( Bounded, Enum, Show, Ord, Eq )
 
 instance CEnum PixelFormat where
-  toCInt Depth1MM = 100
-  toCInt Depth100UM = 101
-  toCInt Shift9_2 = 102
-  toCInt Shift9_3 = 103
-  toCInt RGB888 = 200
-  toCInt YUV422 = 201
-  toCInt Gray8 = 202
-  toCInt Gray16 = 203
-  toCInt JPEG = 204
-  toCInt YUVY = 205
-  fromCInt 100 = Depth1MM
-  fromCInt 101 = Depth100UM
-  fromCInt 102 = Shift9_2
-  fromCInt 103 = Shift9_3
-  fromCInt 200 = RGB888
-  fromCInt 201 = YUV422
-  fromCInt 202 = Gray8
-  fromCInt 203 = Gray16
-  fromCInt 204 = JPEG
-  fromCInt 205 = YUVY
+  toCInt Depth1MM   = #const ONI_PIXEL_FORMAT_DEPTH_1_MM
+  toCInt Depth100UM = #const ONI_PIXEL_FORMAT_DEPTH_100_UM
+  toCInt Shift9_2   = #const ONI_PIXEL_FORMAT_SHIFT_9_2
+  toCInt Shift9_3   = #const ONI_PIXEL_FORMAT_SHIFT_9_3
+  toCInt RGB888     = #const ONI_PIXEL_FORMAT_RGB888
+  toCInt YUV422     = #const ONI_PIXEL_FORMAT_YUV422
+  toCInt Gray8      = #const ONI_PIXEL_FORMAT_GRAY8
+  toCInt Gray16     = #const ONI_PIXEL_FORMAT_GRAY16
+  toCInt JPEG       = #const ONI_PIXEL_FORMAT_JPEG
+  toCInt YUVY       = #const ONI_PIXEL_FORMAT_YUYV
+  fromCInt (#const ONI_PIXEL_FORMAT_DEPTH_1_MM)   = Depth1MM
+  fromCInt (#const ONI_PIXEL_FORMAT_DEPTH_100_UM) = Depth100UM
+  fromCInt (#const ONI_PIXEL_FORMAT_SHIFT_9_2)    = Shift9_2
+  fromCInt (#const ONI_PIXEL_FORMAT_SHIFT_9_3)    = Shift9_3
+  fromCInt (#const ONI_PIXEL_FORMAT_RGB888)       = RGB888
+  fromCInt (#const ONI_PIXEL_FORMAT_YUV422)       = YUV422
+  fromCInt (#const ONI_PIXEL_FORMAT_GRAY8)        = Gray8
+  fromCInt (#const ONI_PIXEL_FORMAT_GRAY16)       = Gray16
+  fromCInt (#const ONI_PIXEL_FORMAT_JPEG)         = JPEG
+  fromCInt (#const ONI_PIXEL_FORMAT_YUYV)         = YUVY
   fromCInt i = throw (HoniBugUnknownCEnum "PixelFormat" i)
 
 instance CEnum SensorType where
-  toCInt SensorIR = 1
-  toCInt SensorDepth = 2
-  toCInt SensorColor = 3
-  fromCInt 1 = SensorIR
-  fromCInt 2 = SensorDepth
-  fromCInt 3 = SensorColor
+  toCInt SensorIR    = #const ONI_SENSOR_IR
+  toCInt SensorDepth = #const ONI_SENSOR_COLOR
+  toCInt SensorColor = #const ONI_SENSOR_DEPTH
+  fromCInt (#const ONI_SENSOR_IR)    = SensorIR
+  fromCInt (#const ONI_SENSOR_COLOR) = SensorDepth
+  fromCInt (#const ONI_SENSOR_DEPTH) = SensorColor
   fromCInt i = throw (HoniBugUnknownCEnum "SensorType" i)
 
 -- | Basic description of a device.
