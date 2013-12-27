@@ -28,6 +28,7 @@ module Honi
   , deviceGetSensorInfo
   , deviceCreateStream
   , waitForAnyStream
+  , getVersion
 
   -- * Streams
   , streamStart
@@ -180,3 +181,11 @@ waitForAnyStream streams (OniTimeout timeout) = withArrayLen streams $ \n stream
       i      <- peek streamIndexPtr
       stream <- peek (advancePtr streamsPtr (int i))
       return $ Right stream
+
+-- Helper for oniGetVersion (FFI cannot interface with structs returned by value)
+foreign import ccall unsafe "helpers.h helper_oniGetVersion"
+  helper_oniGetVersion :: IO (Ptr OniVersion)
+
+-- | Get the current version of OpenNI2.
+getVersion :: IO OniVersion
+getVersion = peek =<< helper_oniGetVersion

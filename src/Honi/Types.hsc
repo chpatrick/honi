@@ -11,6 +11,7 @@ module Honi.Types
   ( Status(..)
   , ApiVersion
   , oniApiVersion
+  , OniVersion(..)
   , PixelFormat(..)
   , VideoMode(..)
   , SensorType(..), SensorInfo(..)
@@ -39,6 +40,23 @@ type ApiVersion = Int
 -- | The @ONI_API_VERSION@ against which OpenNI was compiled.
 oniApiVersion :: ApiVersion
 oniApiVersion = #const ONI_API_VERSION
+
+-- | Holds an OpenNI version number, which consists of four separate numbers.
+data OniVersion = OniVersion
+  { oniVersionMajor       :: Int
+  , oniVersionMinor       :: Int
+  , oniVersionMaintenance :: Int
+  , oniVersionBuild       :: Int
+  } deriving ( Eq, Ord, Show )
+
+instance Storable OniVersion where
+  alignment _ = #{alignment OniVersion}
+  sizeOf _ = #{size OniVersion}
+  peek ptr = OniVersion <$>
+    (cIntToInt <$> #{peek OniVersion, major}       ptr) <*>
+    (cIntToInt <$> #{peek OniVersion, minor}       ptr) <*>
+    (cIntToInt <$> #{peek OniVersion, maintenance} ptr) <*>
+    (cIntToInt <$> #{peek OniVersion, build}       ptr)
 
 -- | Converts between a plain Haskell sum type enumeration and a `CInt`.
 class CEnum a where
