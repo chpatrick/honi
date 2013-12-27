@@ -41,4 +41,5 @@ test-Suite tests
     , honi
     , hspec >= 1.7
     , HUnit >= 1.2
+  extra-libraries:     OpenNI2, freenect
   ghc-options: -Wall
