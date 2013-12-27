@@ -3,6 +3,10 @@
 #include "OniCAPI.h"
 #include "OniVersion.h"
 
+-- | Low-level OpenNI types.
+--
+-- This module does not use `error`.
+-- All its potential errors can be caught as `HoniBug`.
 module Honi.Types
   ( Status(..)
   , ApiVersion
@@ -33,10 +37,12 @@ type ApiVersion = Int
 oniApiVersion :: ApiVersion
 oniApiVersion = #const ONI_API_VERSION
 
+-- | Converts between a plain Haskell sum type enumeration and a `CInt`.
 class CEnum a where
   fromCInt :: CInt -> a
   toCInt :: a -> CInt
 
+-- | Possible OpenNI failure values.
 data Status
   = StatusOK
   | StatusError
@@ -53,6 +59,7 @@ data Status
 -- but we would have to ignore the return value otherwise.
 instance Exception Status
 
+-- | Exception to be thrown for bugs in this OpenNI binding.
 data HoniBug
   = HoniBugUnknownCEnum String CInt
     deriving ( Eq, Ord, Show, Typeable )
@@ -78,12 +85,14 @@ instance CEnum Status where
   fromCInt 102 = StatusTimeOut
   fromCInt i = throw (HoniBugUnknownCEnum "Status" i)
 
+-- | The source of the stream.
 data SensorType
   = SensorIR
   | SensorColor
   | SensorDepth
     deriving ( Bounded, Enum, Eq, Ord, Show )
 
+-- | All available formats of the output of a stream.
 data PixelFormat
   = Depth1MM
   | Depth100UM
@@ -129,6 +138,7 @@ instance CEnum SensorType where
   fromCInt 3 = SensorColor
   fromCInt i = throw (HoniBugUnknownCEnum "SensorType" i)
 
+-- | Basic description of a device.
 data DeviceInfo = DeviceInfo
   { uri :: BS.ByteString
   , vendor :: BS.ByteString
@@ -147,6 +157,7 @@ instance Storable DeviceInfo where
     #{peek OniDeviceInfo, usbVendorId} ptr <*>
     #{peek OniDeviceInfo, usbProductId} ptr
 
+-- | Description of the output: format and resolution.
 data VideoMode = VideoMode
   { pixelFormat :: PixelFormat
   , resolutionX :: Int
@@ -166,6 +177,7 @@ instance Storable VideoMode where
     (cIntToInt <$> #{peek OniVideoMode, resolutionY} ptr) <*>
     (cIntToInt <$> #{peek OniVideoMode, fps} ptr)
 
+-- | List of supported video modes by a specific source.
 data SensorInfo = SensorInfo
   { sensorType :: SensorType
   , supportedVideoModes :: [ VideoMode ]
@@ -186,13 +198,17 @@ instance Storable SensorInfo where
 
 data Opaque
 
+-- | A void pointer, not specifying what it points to.
 type OpaquePtr = Ptr Opaque
 
+-- | An opened OpenNI device.
 newtype DeviceHandle = DeviceHandle OpaquePtr
   deriving ( Eq, Ord, Storable )
 
+-- | A handle to an OpenNI stream.
 newtype StreamHandle = StreamHandle OpaquePtr
   deriving ( Eq, Ord, Storable )
 
+-- | A handle to an OpenNI recorder.
 newtype RecorderHandle = RecorderHandle OpaquePtr
   deriving ( Eq, Ord, Storable )
