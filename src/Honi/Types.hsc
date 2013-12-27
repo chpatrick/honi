@@ -46,7 +46,12 @@ data Status
   | StatusOutOfFlow
   | StatusNoDevice
   | StatusTimeOut
-    deriving ( Bounded, Enum, Eq, Ord, Show )
+    deriving ( Bounded, Enum, Eq, Ord, Show, Typeable )
+
+-- | Exception instance for Status so that we can throw it
+-- in cases where @StatusOK@ is expected from the implementation
+-- but we would have to ignore the return value otherwise.
+instance Exception Status
 
 data HoniBug
   = HoniBugUnknownCEnum String CInt

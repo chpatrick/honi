@@ -35,6 +35,7 @@ module Honi
 where
 
 import Control.Applicative
+import Control.Exception (throwIO)
 import qualified Data.ByteString as BS
 import Foreign
 import Foreign.C
@@ -75,8 +76,10 @@ getDeviceList = alloca $ \listPtr -> alloca $ \numPtr ->
     num <- peek numPtr
     list <- peek listPtr
     deviceList <- peekArray (fromIntegral num) list
-    oniReleaseDeviceList list
-    return $ Right deviceList
+    status <- oniReleaseDeviceList list
+    case fromCInt status of
+      StatusOK -> return $ Right deviceList
+      err      -> throwIO err
 
 -- | Run the given action if `StatusOK` was returned from the first one.
 whenOK :: IO OniStatus -> Oni a -> Oni a
