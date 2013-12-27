@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables #-}
 
 -- | Binding for the OpenNI C API (OniCAPI.h).
 --
@@ -27,6 +27,7 @@ module Honi
   , deviceClose
   , deviceGetSensorInfo
   , deviceCreateStream
+  , waitForAnyStream
 
   -- * Streams
   , streamStart
@@ -152,3 +153,22 @@ foreign import ccall unsafe "OniCAPI.h oniStreamStop"
 -- | Stop generating data from the stream.
 streamStop :: StreamHandle -> IO ()
 streamStop (StreamHandle sh) = oniStreamStop sh
+
+foreign import ccall unsafe "OniCAPI.h oniWaitForAnyStream"
+  oniWaitForAnyStream :: Ptr StreamHandle -> CInt -> Ptr CInt -> CInt -> IO OniStatus
+  --                     [N many streams] -> N -> index of filled steam -> timeout
+
+-- | Wait for any of the streams to have a new frame.
+-- Returns the stream that has a new frame.
+--
+-- If you need to know the index of the stream with a new frame, you can use
+-- the Eq instance of `StreamHandle`.
+waitForAnyStream :: [ StreamHandle ]
+                 -> OniTimeout       -- ^ Timeout (milliseconds)
+                 -> Oni StreamHandle
+waitForAnyStream streams (OniTimeout timeout) = withArrayLen streams $ \n streamsPtr -> do
+  alloca $ \(streamIndexPtr :: Ptr CInt) -> do
+    whenOK (oniWaitForAnyStream streamsPtr (fromIntegral n) streamIndexPtr (fromIntegral timeout)) $ do
+      i      <- peek streamIndexPtr
+      stream <- peek (advancePtr streamsPtr (fromIntegral i))
+      return $ Right stream
