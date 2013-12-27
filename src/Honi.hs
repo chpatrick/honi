@@ -2,6 +2,7 @@
 
 module Honi
   (ApiVersion
+  , Oni
   , initialize, shutdown
   , getDeviceList
   , deviceOpen
