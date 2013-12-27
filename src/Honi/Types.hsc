@@ -1,9 +1,12 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls, DeriveDataTypeable #-}
 
 #include "OniCAPI.h"
+#include "OniVersion.h"
 
 module Honi.Types
   ( Status(..)
+  , ApiVersion
+  , oniApiVersion
   , PixelFormat(..)
   , VideoMode(..)
   , SensorType(..), SensorInfo(..)
@@ -22,6 +25,13 @@ import qualified Data.ByteString as BS
 import Data.Typeable
 import Foreign
 import Foreign.C
+
+-- | Numerical version of the OpenNI API.
+type ApiVersion = Int
+
+-- | The @ONI_API_VERSION@ against which OpenNI was compiled.
+oniApiVersion :: ApiVersion
+oniApiVersion = #const ONI_API_VERSION
 
 class CEnum a where
   fromCInt :: CInt -> a

@@ -7,7 +7,7 @@
 -- >import Honi
 -- >import Honi.Types
 -- >
--- >initialize 2
+-- >initialize oniApiVersion
 -- >Right (di:_) <- getDeviceList
 -- >Right d      <- deviceOpenInfo di
 -- >deviceGetSensorInfo d SensorDepth
@@ -17,6 +17,8 @@
 module Honi
   ( ApiVersion
   , Oni
+  , oniApiVersion
+
   -- * General
   , initialize, shutdown
   , getDeviceList
@@ -48,11 +50,9 @@ type Oni a = IO (Either Status a)
 foreign import ccall unsafe "OniCAPI.h oniInitialize"
   oniInitialize :: CInt -> IO OniStatus
 
--- | Numerical version of the OpenNI API.
-type ApiVersion = Int
-
 
 -- | Initialize OpenNI2. Must be called before any other Honi IO functions.
+-- Use `oniApiVersion` for the OpenNI version this binding was compiled against.
 initialize :: ApiVersion -> IO Status
 initialize version
   = fromCInt <$> oniInitialize (fromIntegral version)
