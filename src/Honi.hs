@@ -62,7 +62,7 @@ foreign import ccall unsafe "OniCAPI.h oniInitialize"
 -- Use `oniApiVersion` for the OpenNI version this binding was compiled against.
 initialize :: ApiVersion -> IO Status
 initialize version
-  = fromCInt <$> oniInitialize (fromIntegral version)
+  = fromCInt <$> oniInitialize (cint version)
 
 -- | Shutdown OpenNI2.
 foreign import ccall unsafe "OniCAPI.h oniShutdown"
@@ -81,7 +81,7 @@ getDeviceList = alloca $ \listPtr -> alloca $ \numPtr ->
   whenOK (oniGetDeviceList listPtr numPtr) $ do
     num <- peek numPtr
     list <- peek listPtr
-    deviceList <- peekArray (fromIntegral num) list
+    deviceList <- peekArray (int num) list
     status <- oniReleaseDeviceList list
     case fromCInt status of
       StatusOK -> return $ Right deviceList
@@ -94,6 +94,14 @@ whenOK oni ok = do
   case fromCInt r of
     StatusOK -> ok
     err -> return $ Left err
+
+-- Monomorphic versions of fromIntegral to make code clear.
+int :: CInt -> Int
+int = fromIntegral
+
+cint :: Int -> CInt
+cint = fromIntegral
+
 
 foreign import ccall unsafe "OniCAPI.h oniDeviceOpen"
   oniDeviceOpen :: CString -> Ptr OpaquePtr -> IO OniStatus
@@ -168,7 +176,7 @@ waitForAnyStream :: [ StreamHandle ]
                  -> Oni StreamHandle
 waitForAnyStream streams (OniTimeout timeout) = withArrayLen streams $ \n streamsPtr -> do
   alloca $ \(streamIndexPtr :: Ptr CInt) -> do
-    whenOK (oniWaitForAnyStream streamsPtr (fromIntegral n) streamIndexPtr (fromIntegral timeout)) $ do
+    whenOK (oniWaitForAnyStream streamsPtr (cint n) streamIndexPtr (cint timeout)) $ do
       i      <- peek streamIndexPtr
-      stream <- peek (advancePtr streamsPtr (fromIntegral i))
+      stream <- peek (advancePtr streamsPtr (int i))
       return $ Right stream
