@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls, DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, EmptyDataDecls, DeriveDataTypeable, NamedFieldPuns #-}
 
 #include "OniCAPI.h"
 #include "OniVersion.h"
@@ -24,6 +24,7 @@ module Honi.Types
   , OniTimeout(..)
   , timeoutNone
   , timeoutForever
+  , OniFrame(..)
   ) where
 
 import Control.Applicative
@@ -247,3 +248,97 @@ newtype StreamHandle = StreamHandle OpaquePtr
 -- | A handle to an OpenNI recorder.
 newtype RecorderHandle = RecorderHandle OpaquePtr
   deriving ( Eq, Ord, Storable )
+
+-- Monomorphic versions of fromIntegral to make code clear.
+int :: CInt -> Int
+int = fromIntegral
+
+-- | `OniFrame` with C types.
+data C_OniFrame = C_OniFrame
+  { _frameData :: BS.ByteString
+
+  , _frameSensorType :: SensorType
+  , _frameTimestamp :: Word64
+  , _frameIndex :: CInt
+
+  , _frameWidth :: CInt
+  , _frameHeight :: CInt
+
+  , _frameVideoMode :: VideoMode
+  , _frameCroppingEnabled :: Bool
+  , _frameCropOriginX :: CInt
+  , _frameCropOriginY :: CInt
+
+  , _frameStride :: CInt
+  } deriving ( Eq, Ord, Show )
+
+-- | All information of the current frame.
+data OniFrame = OniFrame
+  { frameData :: BS.ByteString
+
+  , frameSensorType :: SensorType
+  , frameTimestamp :: Word64
+  , frameIndex :: Int
+
+  , frameWidth :: Int
+  , frameHeight :: Int
+
+  , frameVideoMode :: VideoMode
+  , frameCroppingEnabled :: Bool
+  , frameCropOriginX :: Int
+  , frameCropOriginY :: Int
+
+  , frameStride :: Int
+  } deriving ( Eq, Ord, Show )
+
+instance Storable C_OniFrame where
+  alignment _ = #{alignment OniFrame}
+  sizeOf _ = #{size OniFrame}
+  peek ptr = do
+    len     <- int <$> #{peek OniFrame, dataSize} ptr
+    dataPtr <- #{peek OniFrame, data} ptr
+
+    -- TODO account for stride
+    C_OniFrame
+      <$> BS.packCStringLen (dataPtr, len)
+      <*> (fromCInt <$> #{peek OniFrame, sensorType} ptr)
+      <*> (#{peek OniFrame, timestamp} ptr)
+      <*> (#{peek OniFrame, frameIndex} ptr)
+      <*> (#{peek OniFrame, width} ptr)
+      <*> (#{peek OniFrame, height} ptr)
+      <*> (#{peek OniFrame, videoMode} ptr)
+      <*> (#{peek OniFrame, croppingEnabled} ptr)
+      <*> (#{peek OniFrame, cropOriginX} ptr)
+      <*> (#{peek OniFrame, cropOriginY} ptr)
+      <*> (#{peek OniFrame, stride} ptr)
+
+instance Storable OniFrame where
+  alignment _ = #{alignment OniFrame}
+  sizeOf _ = #{size OniFrame}
+  peek ptr = do
+    C_OniFrame
+      { _frameData
+      , _frameSensorType
+      , _frameTimestamp
+      , _frameIndex
+      , _frameWidth
+      , _frameHeight
+      , _frameVideoMode
+      , _frameCroppingEnabled
+      , _frameCropOriginX
+      , _frameCropOriginY
+      , _frameStride
+      } <- peek (castPtr ptr)
+    return $ OniFrame
+      { frameData            = _frameData
+      , frameSensorType      = _frameSensorType
+      , frameTimestamp       = _frameTimestamp
+      , frameIndex           = int _frameIndex
+      , frameWidth           = int _frameWidth
+      , frameHeight          = int _frameHeight
+      , frameVideoMode       = _frameVideoMode
+      , frameCroppingEnabled = _frameCroppingEnabled
+      , frameCropOriginX     = int _frameCropOriginX
+      , frameCropOriginY     = int _frameCropOriginY
+      , frameStride          = int _frameStride
+      }

@@ -34,6 +34,7 @@ module Honi
   -- * Streams
   , streamStart
   , streamStop
+  , streamReadFrame
 
   -- * Timeouts
   , OniTimeout
@@ -202,3 +203,17 @@ getExtendedError :: IO String
 getExtendedError = do
   charPtr <- oniGetExtendedError
   peekCAString charPtr
+
+foreign import ccall unsafe "OniCAPI.h oniStreamReadFrame"
+  oniStreamReadFrame :: OpaquePtr -> Ptr (Ptr OniFrame) -> IO OniStatus
+
+-- | Get the next frame from the stream.
+-- This function is blocking until there is a new frame from the stream.
+-- For timeout, use `waitForStreams` first.
+streamReadFrame :: StreamHandle -> Oni OniFrame
+streamReadFrame (StreamHandle sh) = do
+  alloca $ \oniFramePtrPtr -> do
+    whenOK (oniStreamReadFrame sh oniFramePtrPtr) $ do
+      oniFramePtr <- peek oniFramePtrPtr
+      oniFrame <- peek oniFramePtr
+      return $ Right oniFrame
