@@ -184,7 +184,7 @@ data VideoMode = VideoMode
   , resolutionX :: Int
   , resolutionY :: Int
   , fps :: Int
-  } deriving Show
+  } deriving ( Eq, Ord, Show )
 
 cIntToInt :: CInt -> Int
 cIntToInt = fromIntegral
@@ -202,7 +202,7 @@ instance Storable VideoMode where
 data SensorInfo = SensorInfo
   { sensorType :: SensorType
   , supportedVideoModes :: [ VideoMode ]
-  } deriving Show
+  } deriving ( Eq, Ord, Show )
 
 instance Storable SensorInfo where
   alignment _ = #{alignment OniSensorInfo}
