@@ -28,6 +28,9 @@ module Honi
   , deviceGetSensorInfo
   , deviceGetInfo
   , deviceCreateStream
+  , enableDepthColorSync
+  , disableDepthColorSync
+  , getDepthColorSyncEnabled
   , waitForAnyStream
   , bytesPerPixel
   , getVersion
@@ -165,6 +168,28 @@ deviceCreateStream :: DeviceHandle -> SensorType -> Oni StreamHandle
 deviceCreateStream (DeviceHandle dh) st = alloca $ \streamPtr ->
   whenOK (oniDeviceCreateStream dh (toCInt st) streamPtr)
     ((Right . StreamHandle) <$> peek streamPtr)
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceEnableDepthColorSync"
+  oniDeviceEnableDepthColorSync :: OpaquePtr -> IO OniStatus
+
+enableDepthColorSync :: DeviceHandle -> Oni ()
+enableDepthColorSync (DeviceHandle dh) = do
+  whenOK (oniDeviceEnableDepthColorSync dh) (return $ Right ())
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceDisableDepthColorSync"
+  oniDeviceDisableDepthColorSync :: OpaquePtr -> IO ()
+
+disableDepthColorSync :: DeviceHandle -> IO ()
+disableDepthColorSync (DeviceHandle dh) = do
+  oniDeviceDisableDepthColorSync dh
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceGetDepthColorSyncEnabled"
+  oniDeviceGetDepthColorSyncEnabled :: OpaquePtr -> IO OniStatus
+
+getDepthColorSyncEnabled :: DeviceHandle -> Oni ()
+getDepthColorSyncEnabled (DeviceHandle dh) = do
+  whenOK (oniDeviceGetDepthColorSyncEnabled dh) (return $ Right ())
+
 
 foreign import ccall unsafe "OniCAPI.h oniStreamStart"
   oniStreamStart :: OpaquePtr -> IO OniStatus
