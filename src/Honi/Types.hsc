@@ -22,9 +22,15 @@ module Honi.Types
   , CEnum(..)
   , HoniBug(..)
   , OniTimeout(..)
+  , DeviceCallbacks(..), CallbackHandle(..)
   , timeoutNone
   , timeoutForever
   , OniFrame(..)
+
+  -- * Internal
+  , C_DeviceCallbacks(..)
+  , C_OniDeviceInfoCallback
+  , C_OniDeviceStateCallback
   ) where
 
 import Control.Applicative
@@ -229,6 +235,54 @@ timeoutNone = OniTimeout (#const ONI_TIMEOUT_NONE)
 timeoutForever :: OniTimeout
 timeoutForever = OniTimeout (#const ONI_TIMEOUT_FOREVER)
 
+-- | State a device can be in.
+data DeviceState
+  = StateOK
+  | StateError
+  | StateNotReady
+  | StateEOF
+    deriving ( Bounded, Enum, Eq, Ord, Show )
+
+instance CEnum DeviceState where
+  toCInt StateOK       = #const ONI_DEVICE_STATE_OK
+  toCInt StateError    = #const ONI_DEVICE_STATE_ERROR
+  toCInt StateNotReady = #const ONI_DEVICE_STATE_NOT_READY
+  toCInt StateEOF      = #const ONI_DEVICE_STATE_EOF
+  fromCInt (#const ONI_DEVICE_STATE_OK)        = StateOK
+  fromCInt (#const ONI_DEVICE_STATE_ERROR)     = StateError
+  fromCInt (#const ONI_DEVICE_STATE_NOT_READY) = StateNotReady
+  fromCInt (#const ONI_DEVICE_STATE_EOF)       = StateEOF
+  fromCInt i = throw (HoniBugUnknownCEnum "DeviceState" i)
+
+data DeviceCallbacks = DeviceCallbacks
+  { deviceConnected    :: DeviceInfo -> IO ()
+  , deviceDisconnected :: DeviceInfo -> IO ()
+  , deviceStateChanged :: DeviceInfo -> DeviceState -> IO ()
+  }
+
+instance Show DeviceCallbacks where
+  show DeviceCallbacks{} = "DeviceCallbacks"
+
+type C_OniDeviceInfoCallback = Ptr DeviceInfo -> OpaquePtr -> IO ()
+--                             const OniDeviceInfo* pInfo -> void* pCookie
+type C_OniDeviceStateCallback = Ptr DeviceInfo -> CInt -> OpaquePtr -> IO ()
+--                              const OniDeviceInfo* pInfo -> OniDeviceState deviceState -> void* pCookie
+
+data C_DeviceCallbacks = C_DeviceCallbacks
+  { _deviceConnected    :: FunPtr C_OniDeviceInfoCallback
+  , _deviceDisconnected :: FunPtr C_OniDeviceInfoCallback
+  , _deviceStateChanged :: FunPtr C_OniDeviceStateCallback
+  } deriving ( Eq, Ord )
+
+instance Storable C_DeviceCallbacks where
+  alignment _ = #{alignment OniDeviceCallbacks}
+  sizeOf _ = #{size OniDeviceCallbacks}
+  -- TODO error peek?
+  poke ptr (C_DeviceCallbacks connPtr disPtr changedPtr) = do
+    #{poke OniDeviceCallbacks, deviceConnected}    ptr connPtr
+    #{poke OniDeviceCallbacks, deviceDisconnected} ptr disPtr
+    #{poke OniDeviceCallbacks, deviceStateChanged} ptr changedPtr
+
 
 data Opaque
 
@@ -238,6 +292,13 @@ type OpaquePtr = Ptr Opaque
 -- | An opened OpenNI device.
 newtype DeviceHandle = DeviceHandle OpaquePtr
   deriving ( Eq, Ord, Storable )
+
+-- | A registered OpenNI callback.
+data CallbackHandle = CallbackHandle
+  OpaquePtr               -- OpenNI handle pointer
+  C_DeviceCallbacks       -- callback FunPtrs. Each must be freed on unregister
+  (Ptr C_DeviceCallbacks) -- Space where callback FunPtrs are stored. Also must be freed on unregister
+  deriving ( Eq, Ord )
 
 -- | A handle to an OpenNI stream.
 newtype StreamHandle = StreamHandle OpaquePtr

@@ -22,6 +22,8 @@ module Honi
   -- * General
   , initialize, shutdown
   , getDeviceList
+  , registerDeviceCallbacks
+  , unregisterDeviceCallbacks
   , deviceOpen
   , deviceOpenInfo
   , deviceClose
@@ -97,6 +99,52 @@ getDeviceList = alloca $ \listPtr -> alloca $ \numPtr ->
     case fromCInt status of
       StatusOK -> return $ Right deviceList
       err      -> throwIO err
+
+foreign import ccall unsafe "wrapper"
+  allocInfoCBFunPtr :: C_OniDeviceInfoCallback -> IO (FunPtr C_OniDeviceInfoCallback)
+
+foreign import ccall unsafe "wrapper"
+  allocStateCBFunPtr :: C_OniDeviceStateCallback -> IO (FunPtr C_OniDeviceStateCallback)
+
+foreign import ccall unsafe "OniCAPI.h oniRegisterDeviceCallbacks"
+  oniRegisterDeviceCallbacks :: OpaquePtr -> OpaquePtr -> Ptr OpaquePtr -> IO ()
+  --                            OniDeviceCallbacks* pCallbacks -> void* pCookie -> OniCallbackHandle* pHandle
+
+registerDeviceCallbacks :: DeviceCallbacks -> Oni CallbackHandle
+registerDeviceCallbacks (DeviceCallbacks conn dis changed) = do
+
+  -- The `pCookie` is some arbitrary data that we can pass into
+  -- `oniRegisterDeviceCallbacks` and we will get it back in our callbacks.
+  -- We use NULL as the cookie (don't need to pass data C style).
+  let cookie = nullPtr
+
+  c_callbacks <- C_DeviceCallbacks -- Each free'd in unregisterDeviceCallbacks
+    <$> allocInfoCBFunPtr (\devInfoPtr _ -> conn =<< peek devInfoPtr)
+    <*> allocInfoCBFunPtr (\devInfoPtr _ -> dis  =<< peek devInfoPtr)
+    <*> allocStateCBFunPtr (\devInfoPtr devState _ -> do
+                               devInfo <- peek devInfoPtr
+                               changed devInfo (fromCInt devState))
+
+  callbacksPtr <- new c_callbacks -- free'd in unregisterDeviceCallbacks
+
+  alloca $ \callbackHandlePtr -> do
+    oniRegisterDeviceCallbacks (castPtr callbacksPtr) cookie callbackHandlePtr
+    callbackHandle <- peek callbackHandlePtr
+    return . Right $ CallbackHandle callbackHandle c_callbacks callbacksPtr
+
+foreign import ccall unsafe "OniCAPI.h oniUnregisterDeviceCallbacks"
+  oniUnregisterDeviceCallbacks :: OpaquePtr -> IO ()
+  --                              OniCallbackHandle handle
+
+unregisterDeviceCallbacks :: CallbackHandle -> IO ()
+unregisterDeviceCallbacks (CallbackHandle ch c_callbacks c_callbacksPtr) = do
+  oniUnregisterDeviceCallbacks ch
+  -- Free the FunPtrs and the area containing them.
+  let C_DeviceCallbacks connFunPtr disFunPtr changedFunPtr = c_callbacks
+  freeHaskellFunPtr connFunPtr
+  freeHaskellFunPtr disFunPtr
+  freeHaskellFunPtr changedFunPtr
+  free c_callbacksPtr
 
 -- | Run the given action if `StatusOK` was returned from the first one.
 whenOK :: IO OniStatus -> Oni a -> Oni a
