@@ -28,6 +28,7 @@ module Honi
   , deviceGetSensorInfo
   , deviceCreateStream
   , waitForAnyStream
+  , bytesPerPixel
   , getVersion
   , getExtendedError
 
@@ -40,6 +41,9 @@ module Honi
   , OniTimeout
   , timeoutNone
   , timeoutForever
+
+  -- * Internal
+  , bytesPerPixelIO
   )
 where
 
@@ -203,6 +207,36 @@ getExtendedError :: IO String
 getExtendedError = do
   charPtr <- oniGetExtendedError
   peekCAString charPtr
+
+foreign import ccall unsafe "OniCAPI.h oniFormatBytesPerPixel"
+  oniFormatBytesPerPixel :: CInt -> IO CInt
+
+-- | Exposed for testing only.
+bytesPerPixelIO :: PixelFormat -> IO Int
+bytesPerPixelIO pf = int <$> oniFormatBytesPerPixel (toCInt pf)
+
+-- | Translate from format to number of bytes per pixel.
+-- Will return 0 for formats in which the number of bytes per pixel isn't fixed.
+--
+-- (This is implemented ourselves to have it pure;
+-- the C version resets with the global error message logger.
+-- Equivalence with the C version is covered by test suite.)
+bytesPerPixel :: PixelFormat -> Int
+bytesPerPixel pf = case pf of
+  Gray8      -> 1
+
+  Depth1MM   -> 2
+  Depth100UM -> 2
+  Shift9_2   -> 2
+  Shift9_3   -> 2
+  Gray16     -> 2
+
+  RGB888     -> 3
+
+  YUV422     -> 2
+  YUVY       -> 2
+
+  JPEG       -> 1
 
 foreign import ccall unsafe "OniCAPI.h oniStreamReadFrame"
   oniStreamReadFrame :: OpaquePtr -> Ptr (Ptr OniFrame) -> IO OniStatus

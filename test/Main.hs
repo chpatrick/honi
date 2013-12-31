@@ -1,6 +1,7 @@
 module Main where
 
 import           Control.Exception
+import           Control.Monad
 import           Test.Hspec
 
 import Honi
@@ -33,6 +34,10 @@ main = hspec $ do
     it "getExtendedError is empty" $ do
       e <- getExtendedError
       e `shouldBe` ""
+
+    describe "pixel formats" $
+      forM_ allOf $ \format -> it ("bytesPerPixel " ++ show format) $
+        (bytesPerPixel format `shouldBe`) =<< bytesPerPixelIO format
 
 
 allOf :: (Bounded a, Enum a) => [a]
