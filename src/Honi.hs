@@ -122,8 +122,8 @@ deviceOpen :: BS.ByteString -> Oni DeviceHandle
 deviceOpen devUri
   = BS.useAsCString devUri $ \uriPtr ->
       alloca $ \handlePtr ->
-        whenOK (oniDeviceOpen uriPtr handlePtr)
-          ((Right . DeviceHandle) <$> peek handlePtr)
+        whenOK (oniDeviceOpen uriPtr handlePtr) $ do
+          Right . DeviceHandle <$> peek handlePtr
 
 -- | Open a device from a `DeviceInfo`.
 deviceOpenInfo :: DeviceInfo -> Oni DeviceHandle
@@ -166,8 +166,8 @@ foreign import ccall unsafe "OniCAPI.h oniDeviceCreateStream"
 -- | Create a new stream in the device. The stream will originate from the source.
 deviceCreateStream :: DeviceHandle -> SensorType -> Oni StreamHandle
 deviceCreateStream (DeviceHandle dh) st = alloca $ \streamPtr ->
-  whenOK (oniDeviceCreateStream dh (toCInt st) streamPtr)
-    ((Right . StreamHandle) <$> peek streamPtr)
+  whenOK (oniDeviceCreateStream dh (toCInt st) streamPtr) $ do
+    Right . StreamHandle <$> peek streamPtr
 
 foreign import ccall unsafe "OniCAPI.h oniDeviceEnableDepthColorSync"
   oniDeviceEnableDepthColorSync :: OpaquePtr -> IO OniStatus
