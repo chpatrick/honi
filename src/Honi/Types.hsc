@@ -54,10 +54,10 @@ instance Storable OniVersion where
   alignment _ = #{alignment OniVersion}
   sizeOf _ = #{size OniVersion}
   peek ptr = OniVersion <$>
-    (cIntToInt <$> #{peek OniVersion, major}       ptr) <*>
-    (cIntToInt <$> #{peek OniVersion, minor}       ptr) <*>
-    (cIntToInt <$> #{peek OniVersion, maintenance} ptr) <*>
-    (cIntToInt <$> #{peek OniVersion, build}       ptr)
+    (int <$> #{peek OniVersion, major}       ptr) <*>
+    (int <$> #{peek OniVersion, minor}       ptr) <*>
+    (int <$> #{peek OniVersion, maintenance} ptr) <*>
+    (int <$> #{peek OniVersion, build}       ptr)
 
 -- | Converts between a plain Haskell sum type enumeration and a `CInt`.
 class CEnum a where
@@ -187,17 +187,15 @@ data VideoMode = VideoMode
   , fps :: Int
   } deriving ( Eq, Ord, Show )
 
-cIntToInt :: CInt -> Int
-cIntToInt = fromIntegral
 
 instance Storable VideoMode where
   alignment _ = #{alignment OniVideoMode}
   sizeOf _ = #{size OniVideoMode}
   peek ptr = VideoMode <$>
     (fromCInt <$> #{peek OniVideoMode, pixelFormat} ptr) <*>
-    (cIntToInt <$> #{peek OniVideoMode, resolutionX} ptr) <*>
-    (cIntToInt <$> #{peek OniVideoMode, resolutionY} ptr) <*>
-    (cIntToInt <$> #{peek OniVideoMode, fps} ptr)
+    (int <$> #{peek OniVideoMode, resolutionX} ptr) <*>
+    (int <$> #{peek OniVideoMode, resolutionY} ptr) <*>
+    (int <$> #{peek OniVideoMode, fps} ptr)
 
 -- | List of supported video modes by a specific source.
 data SensorInfo = SensorInfo
@@ -212,7 +210,7 @@ instance Storable SensorInfo where
     st <- fromCInt <$> #{peek OniSensorInfo, sensorType} ptr
     nvm <- #{peek OniSensorInfo, numSupportedVideoModes} ptr
     vmsPtr <- #{peek OniSensorInfo, pSupportedVideoModes} ptr
-    vms <- peekArray (cIntToInt nvm) vmsPtr
+    vms <- peekArray (int nvm) vmsPtr
     return $ SensorInfo st vms
 
 #let alignment t = "%lu", (unsigned long)offsetof(struct {char x__; t (y__); }, y__)
