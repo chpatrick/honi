@@ -26,6 +26,7 @@ module Honi
   , deviceOpenInfo
   , deviceClose
   , deviceGetSensorInfo
+  , deviceGetInfo
   , deviceCreateStream
   , waitForAnyStream
   , bytesPerPixel
@@ -145,6 +146,16 @@ deviceGetSensorInfo (DeviceHandle p) sType = do
     else do
       sensorInfo <- peek sip
       return $ Just sensorInfo
+
+foreign import ccall unsafe "OniCAPI.h oniDeviceGetInfo"
+  oniDeviceGetInfo :: OpaquePtr -> Ptr DeviceInfo -> IO OniStatus
+
+-- | Get the `DeviceInfo` of a certain device.
+deviceGetInfo :: DeviceHandle -> Oni DeviceInfo
+deviceGetInfo (DeviceHandle dh) = do
+  alloca $ \diPtr ->
+    whenOK (oniDeviceGetInfo dh diPtr) $ do
+      Right <$> peek diPtr
 
 foreign import ccall unsafe "OniCAPI.h oniDeviceCreateStream"
   oniDeviceCreateStream :: OpaquePtr -> CInt -> Ptr OpaquePtr -> IO OniStatus
