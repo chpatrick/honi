@@ -159,11 +159,11 @@ instance CEnum PixelFormat where
 
 instance CEnum SensorType where
   toCInt SensorIR    = #const ONI_SENSOR_IR
-  toCInt SensorDepth = #const ONI_SENSOR_COLOR
-  toCInt SensorColor = #const ONI_SENSOR_DEPTH
+  toCInt SensorColor = #const ONI_SENSOR_COLOR
+  toCInt SensorDepth = #const ONI_SENSOR_DEPTH
   fromCInt (#const ONI_SENSOR_IR)    = SensorIR
-  fromCInt (#const ONI_SENSOR_COLOR) = SensorDepth
-  fromCInt (#const ONI_SENSOR_DEPTH) = SensorColor
+  fromCInt (#const ONI_SENSOR_COLOR) = SensorColor
+  fromCInt (#const ONI_SENSOR_DEPTH) = SensorDepth
   fromCInt i = throw (HoniBugUnknownCEnum "SensorType" i)
 
 -- | Basic description of a device.
