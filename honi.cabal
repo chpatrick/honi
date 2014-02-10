@@ -3,15 +3,15 @@
 
 name:                honi
 version:             0.1.0.0
--- synopsis:
--- description:
 license:             MIT
-author:              Patrick Chilton, Niklas Hambuechen
-maintainer:          chpatrick@gmail.com niklas@nh2.me
--- copyright:
+author:              Patrick Chilton, Niklas Hambüchen
+maintainer:          Patrick Chilton <chpatrick@gmail.com>, Niklas Hambüchen <niklas@nh2.me>
+copyright:           Patrick Chilton, Niklas Hambüchen
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.8
+synopsis:            OpenNI 2 binding
+description:         OpenNI 2 binding
 
 extra-source-files:
   cbits/helpers.h
@@ -21,8 +21,10 @@ extra-source-files:
 library
   hs-source-dirs:  src
   exposed-modules: Honi, Honi.Types
-  -- other-modules:
-  build-depends:       base, text, bytestring
+  build-depends:
+      base >= 4.5 && < 5
+    , text >= 0.11
+    , bytestring >= 0.9
   extra-libraries:     OpenNI2, freenect
   ghc-options: -Wall
 
@@ -37,7 +39,7 @@ test-Suite tests
   main-is:
     Main.hs
   build-depends:
-      base >= 4
+      base >= 4.5 && < 5
     , honi
     , hspec >= 1.7
     , HUnit >= 1.2
