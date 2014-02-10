@@ -53,6 +53,9 @@ module Honi
   )
 where
 
+-- TODO Remove named FFI functions where not needed
+-- TODO Check if we can make sure that the foreign functions actually exist
+
 import Control.Applicative
 import Control.Exception (throwIO)
 import qualified Data.ByteString as BS

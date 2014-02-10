@@ -33,6 +33,8 @@ module Honi.Types
   , C_OniDeviceStateCallback
   ) where
 
+-- TODO Add poke functions or proper error.
+
 import Control.Applicative
 import Control.Exception
 import Data.Word
