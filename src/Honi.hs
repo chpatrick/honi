@@ -76,6 +76,8 @@ foreign import ccall unsafe "OniCAPI.h oniInitialize"
 
 -- | Initialize OpenNI2. Must be called before any other Honi IO functions.
 -- Use `oniApiVersion` for the OpenNI version this binding was compiled against.
+--
+-- The OpenNI implementation does make sure that calling this multiple times is allowed.
 initialize :: ApiVersion -> IO Status
 initialize version
   = fromCInt <$> oniInitialize (cint version)
