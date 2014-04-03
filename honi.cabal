@@ -19,12 +19,23 @@ extra-source-files:
 
 
 library
-  hs-source-dirs:  src
-  exposed-modules: Honi, Honi.Types
+  hs-source-dirs:  src, gen/hsc
+  exposed-modules:
+    Honi
+    Honi.Types
+    -- Generated from C headers with c2hsc and bindings-dsl
+    Bindings.OpenNI2.OniCAPI
+    Bindings.OpenNI2.OniCEnums
+    Bindings.OpenNI2.OniCProperties
+    Bindings.OpenNI2.OniCTypes
+    Bindings.OpenNI2.OniPlatform
+    Bindings.OpenNI2.OniVersion
+
   build-depends:
       base >= 4.5 && < 5
     , text >= 0.11
     , bytestring >= 0.9
+    , bindings-DSL
   extra-libraries:     OpenNI2, freenect
   ghc-options: -Wall
 
